@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 
 # Copyright 2016 Google Inc.
 #
@@ -16,17 +18,12 @@
 
 # [START imports]
 import os
-
-
-from google.appengine.api import users
-#from google.appengine.ext import ndb
-
 import json
 import jinja2
 import webapp2
 import logging
 import requests
-
+import pycountry
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -43,6 +40,11 @@ KIK_USERNAME        = 'hiponcho'
 KIK_SENDMSG         = 'https://kikapi-1298.appspot.com/kikapi_sendmsg'
 KIK_RECEIVEMSG      = 'https://kikapi-1298.appspot.com/kikapi_receivemsg'
 
+
+GOOGLE_TRANSLATE_API_BASE   = 'https://www.googleapis.com/language/translate/v2?key='
+GOOGLE_API_KEY              = 'AIzaSyCjKsqtqWQI4-C5rxQEGPTLqaVwN63UURU'
+GOOGLE_TRANSLATE_API_PARAMS = '&target=en&q='
+
 # We set a parent key on the 'Greetings' to ensure that they are all
 # in the same entity group. Queries across the single entity group
 # will be consistent. However, the write rate should be limited to
@@ -54,6 +56,44 @@ def guestbook_key(guestbook_name=DEFAULT_GUESTBOOK_NAME):
     We use guestbook_name as the key.
     """
     return ndb.Key('Guestbook', guestbook_name)
+
+def sendmsg(body, to=None, chatId=None):
+    if chatId is None:
+        chatId  = '9d58dc9cc7fd994bbb575c9399e4335781ee55105d0784d7cb348f09d7337607'
+    
+    if to is None:
+        to      = 'huangkuan'
+
+    requests.post(
+        KIK_API_MSG,
+        auth=(KIK_USERNAME, KIK_APIKEY),
+        headers={
+            'Content-Type': 'application/json'
+        },
+        data=json.dumps({
+            'messages': [
+                {
+                    'body':     body, 
+                    'to':       to, 
+                    'type':     'text', 
+                    'chatId':   chatId,
+                }
+            ]
+        })
+    )
+
+
+def translate(body):
+    url = GOOGLE_TRANSLATE_API_BASE + GOOGLE_API_KEY + GOOGLE_TRANSLATE_API_PARAMS + body
+    r = requests.get(url)
+    ret = json.loads(r.content).get('data').get('translations')
+    #logging.info(self.request)
+    translatedText          = ret[0].get('translatedText')
+    detectedSourceLanguage  = ret[0].get('detectedSourceLanguage')
+    '''detectedSourceLanguage  = pycountry.languages.get(iso639_1_code=ret[0].get('detectedSourceLanguage')).name'''
+    msg = "Did you just say \"" + translatedText + "\" in " + detectedSourceLanguage + "?"
+
+    return msg
 
 
 # [START main_page]
@@ -117,61 +157,31 @@ class KikApi_Config(webapp2.RequestHandler):
         self.response.write(r.content)
 
 class KikApi_ReceiveMsg(webapp2.RequestHandler):
+
         def get(self):
             self.response.write('')
 
-
         def post(self):
+            
             data    = json.loads(self.request.body)
             msg     = data.get('messages')[0]
             body    = msg.get('body')
             to      = msg.get('from')
             chatId  = msg.get('chatId')
-
+            
+            logging.info(data)
             logging.info(msg)
-            
-            requests.post(
-                KIK_API_MSG,
-                auth=(KIK_USERNAME, KIK_APIKEY),
-                headers={
-                    'Content-Type': 'application/json'
-                },
-                data=json.dumps({
-                    'messages': [
-                        {
-                            'body': body, 
-                            'to': to, 
-                            'type': 'text', 
-                            'chatId': chatId
-                        }
-                    ]
-                })
-            )
-            
+            body = translate(body)
+            sendmsg(body, to, chatId)             
+
             self.response.write('')
+
 
 class KikApi_SendMsg(webapp2.RequestHandler):
         def get(self):
-            requests.post(
-                KIK_API_MSG,
-                auth=(KIK_USERNAME, KIK_APIKEY),
-                headers={
-                    'Content-Type': 'application/json'
-                },
-                data=json.dumps({
-                    'messages': [
-                        {
-                            'body': 'bar', 
-                            'to': 'huangkuan', 
-                            'type': 'text', 
-                            'chatId': '9d58dc9cc7fd994bbb575c9399e4335781ee55105d0784d7cb348f09d7337607'
-                        }
-                    ]
-                })
-            )
-
-            logging.info(self.request)
-            self.response.write('')
+            msg = translate(u"我要吃汉堡包")
+            #sendmsg(msg)
+            self.response.write(msg)
 
 
         def post(self):

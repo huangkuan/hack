@@ -7,6 +7,11 @@ curl -H "Content-Type: application/json" -X POST -d '{"messages":[{"body":"kik w
 curl -H "Content-Type: application/json" -X POST -d '{"t":"t"}' https://kikapi-1298.appspot.com/kikapi_config
 
 
+Installing 3rd party library for webapp2 app. You need to install it to "lib" folder
+pip install -t lib -r requirements.txt
+
+
+
 # Guestbook
 
 Guestbook is an example application showing basic usage of Google App
