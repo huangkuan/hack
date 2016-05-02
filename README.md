@@ -1,3 +1,12 @@
+curl -H "Content-Type: application/json" -X POST -d '{"t":"t"}' http://127.0.0.1:8080/kikapi_config
+
+curl -H "Content-Type: application/json" -X POST -d '{"messages":"asdf"}' http://127.0.0.1:8080/kikapi_config
+curl -H "Content-Type: application/json" -X POST -d '{"messages":[{"body":"kik welcome"}]}' http://127.0.0.1:8080/kikapi_receivemsg
+
+
+curl -H "Content-Type: application/json" -X POST -d '{"t":"t"}' https://kikapi-1298.appspot.com/kikapi_config
+
+
 # Guestbook
 
 Guestbook is an example application showing basic usage of Google App
