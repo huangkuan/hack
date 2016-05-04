@@ -82,7 +82,6 @@ def sendmsg(body, to=None, chatId=None):
         })
     )
 
-
 def translate(body):
     url = GOOGLE_TRANSLATE_API_BASE + GOOGLE_API_KEY + GOOGLE_TRANSLATE_API_PARAMS + body
     r = requests.get(url)
@@ -96,15 +95,11 @@ def translate(body):
     return msg
 
 
-# [START main_page]
 class MainPage(webapp2.RequestHandler):
 
     def get(self):
         self.response.write('MainPage')
-# [END main_page]
 
-
-# [START guestbook]
 class Guestbook(webapp2.RequestHandler):
 
     def get(self):
@@ -112,8 +107,6 @@ class Guestbook(webapp2.RequestHandler):
 
     def post(self):
         self.response.write("post")
-# [END guestbook]
-
 
 class KikApi(webapp2.RequestHandler):
     def get(self):
@@ -124,7 +117,6 @@ class KikApi(webapp2.RequestHandler):
     def post(self):
         #logging.info('kik post api.')
         self.response.write("Testing page for Kik API POST")
-
 
 class KikApi_Config(webapp2.RequestHandler):
     def get(self):
@@ -176,7 +168,6 @@ class KikApi_ReceiveMsg(webapp2.RequestHandler):
 
             self.response.write('')
 
-
 class KikApi_SendMsg(webapp2.RequestHandler):
         def get(self):
             msg = translate(u"我要吃汉堡包")
@@ -188,6 +179,19 @@ class KikApi_SendMsg(webapp2.RequestHandler):
             logging.info(self.request)
             self.response.write('')
 
+class FBApi_Webhook(webapp2.RequestHandler):
+    def get(self):
+        #print self.request
+        logging.info('get FBApi_Webhook')
+        logging.info(self.request.get('hub.verify_token'))
+        self.response.write(self.request.get('hub.challenge'))
+
+    def post(self):
+        logging.info('post FBApi_Webhook')
+        logging.info(self.request)
+        self.response.write('')
+
+
 # [START app]
 app = webapp2.WSGIApplication([
     ('/', MainPage),
@@ -196,6 +200,8 @@ app = webapp2.WSGIApplication([
     ('/kikapi_config', KikApi_Config),
     ('/kikapi_sendmsg', KikApi_SendMsg),    
     ('/kikapi_receivemsg', KikApi_ReceiveMsg),
+    ('/fbapi_webhook', FBApi_Webhook),
+
 
 ], debug=True)
 # [END app]
