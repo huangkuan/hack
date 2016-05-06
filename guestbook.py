@@ -23,8 +23,10 @@ import jinja2
 import webapp2
 import logging
 import requests
-import pycountry
-#from wit import Wit#, WitError
+from apis import GCLOUD
+from apis import DARKSKY
+
+
 
 def say(session_id, context, msg):
     print(msg)
@@ -49,7 +51,6 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 # [END imports]
 
 DEFAULT_GUESTBOOK_NAME = 'default_guestbook'
-DS_API              = 'https://api.forecast.io/forecast/04e2a312ccb44bb2c4cc196f41a681bc/' 
 KIK_API_CONFIGURL   = 'https://api.kik.com/v1/config'
 KIK_API_MSG         = 'https://api.kik.com/v1/message'
 KIK_APIKEY          = '440f7eeb-d558-4a09-8ca9-d5a1cbf1513f'
@@ -58,11 +59,6 @@ KIK_SENDMSG         = 'https://kikapi-1298.appspot.com/kikapi_sendmsg'
 KIK_RECEIVEMSG      = 'https://kikapi-1298.appspot.com/kikapi_receivemsg'
 
 
-GOOGLE_GEOCODE_API_BASE     = 'https://maps.googleapis.com/maps/api/geocode/json?key='
-GOOGLE_TRANSLATE_API_BASE   = 'https://www.googleapis.com/language/translate/v2?key='
-GOOGLE_DETECT_API_BASE      = 'https://www.googleapis.com/language/translate/v2/detect?key='
-GOOGLE_API_KEY              = 'AIzaSyCjKsqtqWQI4-C5rxQEGPTLqaVwN63UURU'
-GOOGLE_TRANSLATE_API_PARAMS = '&target=en&q='
 
 
 # We set a parent key on the 'Greetings' to ensure that they are all
@@ -76,7 +72,6 @@ def guestbook_key(guestbook_name=DEFAULT_GUESTBOOK_NAME):
     We use guestbook_name as the key.
     """
     return ndb.Key('Guestbook', guestbook_name)
-
 
 def req(access_token, meth, path, params, **kwargs):
     rsp = requests.request(
@@ -96,7 +91,6 @@ def req(access_token, meth, path, params, **kwargs):
     if 'error' in json:
         raise WitError('Wit responded with an error: ' + json['error'])
     return json
-
 
 def sendmsg(body, to=None, chatId=None):
     if chatId is None:
@@ -122,44 +116,6 @@ def sendmsg(body, to=None, chatId=None):
             ]
         })
     )
-
-def detect(body):
-    url = GOOGLE_DETECT_API_BASE + GOOGLE_API_KEY + '&q=' + body
-    r = requests.get(url)
-    ret = json.loads(r.content)
-    print ret
-    return ret.get('data').get('detections')[0][0].get('language')
-
-
-def translate(body, language='en'):
-    url = GOOGLE_TRANSLATE_API_BASE + GOOGLE_API_KEY + '&target=' + language + '&q=' + body
-    r = requests.get(url)
-    ret = json.loads(r.content).get('data').get('translations')
-    #logging.info(self.request)
-    translatedText          = ret[0].get('translatedText')
-    detectedSourceLanguage  = ret[0].get('detectedSourceLanguage')
-    #msg = "Did you just say \"" + translatedText + "\" in " + detectedSourceLanguage + "?"
-    #return msg
-    return translatedText
-
-def geocode(addr):
-    url = GOOGLE_GEOCODE_API_BASE + GOOGLE_API_KEY + "&address=" + addr
-    r = requests.get(url)
-    ret = json.loads(r.content)
-    return ret
-
-def darksky(lat, lng):
-    url = DS_API + str(lat) + ',' + str(lng)
-    r = requests.get(url)
-    ret = json.loads(r.content)
-    return ret
-
-class WitAPI():
-    @staticmethod
-    def parse(s):
-        resp = client.message(s)
-        #print resp
-        return str(resp)
 
 class MainPage(webapp2.RequestHandler):
 
@@ -206,7 +162,6 @@ class KikApi_Config(webapp2.RequestHandler):
         )
         self.response.write(r.content)
 
-
 class KikApi_ReceiveMsg(webapp2.RequestHandler):
 
         def get(self):
@@ -222,8 +177,8 @@ class KikApi_ReceiveMsg(webapp2.RequestHandler):
             
 #            logging.info(data)
 #            logging.info(msg)
-            lan  = detect(body)
-            body = translate(body, lan)
+            lan  = GCLOUD.detect(body)
+            body = GCLOUD.translate(body, lan)
 
             sendmsg(body, to, chatId)             
 
@@ -245,21 +200,22 @@ class KikApi_SendMsg(webapp2.RequestHandler):
             #logging.info(str(resp))
             #resp = u'Ciudad de México'
             #resp = u'上海'
-            resp = u'Paris'
-            language = detect(resp)
-            resp1 = translate(resp)
-            ret = geocode(resp1)
+            resp = u'Paris'  
+            language = GCLOUD.detect(resp)
+            resp1 = GCLOUD.translate(resp)
+            ret = GCLOUD.geocode(resp1)
             lat = ret.get('results')[0].get('geometry').get('location').get('lat')
             lng = ret.get('results')[0].get('geometry').get('location').get('lng')
-            weather = darksky(lat, lng)
+            weather = DARKSKY.getWeather(lat, lng)
             currently = weather.get('currently')
             output = "It is " + currently.get('summary').lower() + " right now. The temperature is " + str(int(currently.get('temperature'))) + "."
             print output
-            self.response.write(translate(output, language))
+            self.response.write(GCLOUD.translate(output, language))
 
         def post(self):
             logging.info(self.request)
             self.response.write('')
+
 
 class FBApi_Webhook(webapp2.RequestHandler):
     def get(self):

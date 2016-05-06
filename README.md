@@ -11,14 +11,10 @@ Installing 3rd party library for webapp2 app. You need to install it to "lib" fo
 pip install -t lib -r requirements.txt
 
 
+local server
+dev_appserver.py .
 
-# Guestbook
 
-Guestbook is an example application showing basic usage of Google App
-Engine. Users can read & write text messages and optionaly log-in with
-their Google account. Messages are stored in App Engine (NoSQL)
-High Replication Datastore (HRD) and retrieved using a strongly consistent
-(ancestor) query.
 
 ## Products
 - [App Engine][1]
