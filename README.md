@@ -7,13 +7,14 @@ curl -H "Content-Type: application/json" -X POST -d '{"messages":[{"body":"kik w
 curl -H "Content-Type: application/json" -X POST -d '{"t":"t"}' https://kikapi-1298.appspot.com/kikapi_config
 
 
-# Guestbook
+Installing 3rd party library for webapp2 app. You need to install it to "lib" folder
+pip install -t lib -r requirements.txt
 
-Guestbook is an example application showing basic usage of Google App
-Engine. Users can read & write text messages and optionaly log-in with
-their Google account. Messages are stored in App Engine (NoSQL)
-High Replication Datastore (HRD) and retrieved using a strongly consistent
-(ancestor) query.
+
+local server
+dev_appserver.py .
+
+
 
 ## Products
 - [App Engine][1]

@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 
 # Copyright 2016 Google Inc.
 #
@@ -16,16 +18,30 @@
 
 # [START imports]
 import os
-
-
-from google.appengine.api import users
-#from google.appengine.ext import ndb
-
 import json
 import jinja2
 import webapp2
 import logging
 import requests
+from apis import GCLOUD
+from apis import DARKSKY
+
+
+
+def say(session_id, context, msg):
+    print(msg)
+
+def merge(session_id, context, entities, msg):
+    return context
+
+def error(session_id, context, e):
+    print(str(e))
+
+actions = {
+    'say': say,
+    'merge': merge,
+    'error': error,
+}
 
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -35,13 +51,15 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 # [END imports]
 
 DEFAULT_GUESTBOOK_NAME = 'default_guestbook'
-
 KIK_API_CONFIGURL   = 'https://api.kik.com/v1/config'
 KIK_API_MSG         = 'https://api.kik.com/v1/message'
 KIK_APIKEY          = '440f7eeb-d558-4a09-8ca9-d5a1cbf1513f'
 KIK_USERNAME        = 'hiponcho'
 KIK_SENDMSG         = 'https://kikapi-1298.appspot.com/kikapi_sendmsg'
 KIK_RECEIVEMSG      = 'https://kikapi-1298.appspot.com/kikapi_receivemsg'
+
+
+
 
 # We set a parent key on the 'Greetings' to ensure that they are all
 # in the same entity group. Queries across the single entity group
@@ -55,25 +73,54 @@ def guestbook_key(guestbook_name=DEFAULT_GUESTBOOK_NAME):
     """
     return ndb.Key('Guestbook', guestbook_name)
 
+def req(access_token, meth, path, params, **kwargs):
+    rsp = requests.request(
+        meth,
+        'https://api.wit.ai/  ' + path,
+        headers={
+            'authorization': 'Bearer ' + access_token,
+            'accept': 'application/vnd.wit.20160330+json'
+        },
+        params=params,
+        **kwargs
+    )
+    if rsp.status_code > 200:
+        logging.info('Wit responded with status: ' + str(rsp.status_code) +
+                       ' (' + rsp.reason + ')')
+    json = rsp.json()
+    if 'error' in json:
+        raise WitError('Wit responded with an error: ' + json['error'])
+    return json
 
-# [START main_page]
+def sendmsg(body, to=None, chatId=None):
+    if chatId is None:
+        chatId  = '9d58dc9cc7fd994bbb575c9399e4335781ee55105d0784d7cb348f09d7337607'
+    
+    if to is None:
+        to      = 'huangkuan'
+
+    requests.post(
+        KIK_API_MSG,
+        auth=(KIK_USERNAME, KIK_APIKEY),
+        headers={
+            'Content-Type': 'application/json'
+        },
+        data=json.dumps({
+            'messages': [
+                {
+                    'body':     body, 
+                    'to':       to, 
+                    'type':     'text', 
+                    'chatId':   chatId,
+                }
+            ]
+        })
+    )
+
 class MainPage(webapp2.RequestHandler):
 
     def get(self):
         self.response.write('MainPage')
-# [END main_page]
-
-
-# [START guestbook]
-class Guestbook(webapp2.RequestHandler):
-
-    def get(self):
-        self.response.write("get")
-
-    def post(self):
-        self.response.write("post")
-# [END guestbook]
-
 
 class KikApi(webapp2.RequestHandler):
     def get(self):
@@ -84,7 +131,6 @@ class KikApi(webapp2.RequestHandler):
     def post(self):
         #logging.info('kik post api.')
         self.response.write("Testing page for Kik API POST")
-
 
 class KikApi_Config(webapp2.RequestHandler):
     def get(self):
@@ -117,66 +163,72 @@ class KikApi_Config(webapp2.RequestHandler):
         self.response.write(r.content)
 
 class KikApi_ReceiveMsg(webapp2.RequestHandler):
+
         def get(self):
             self.response.write('')
 
-
         def post(self):
+            
             data    = json.loads(self.request.body)
             msg     = data.get('messages')[0]
             body    = msg.get('body')
             to      = msg.get('from')
             chatId  = msg.get('chatId')
+            
+#            logging.info(data)
+#            logging.info(msg)
+            lan  = GCLOUD.detect(body)
+            body = GCLOUD.translate(body, lan)
 
-            logging.info(msg)
-            
-            requests.post(
-                KIK_API_MSG,
-                auth=(KIK_USERNAME, KIK_APIKEY),
-                headers={
-                    'Content-Type': 'application/json'
-                },
-                data=json.dumps({
-                    'messages': [
-                        {
-                            'body': body, 
-                            'to': to, 
-                            'type': 'text', 
-                            'chatId': chatId
-                        }
-                    ]
-                })
-            )
-            
+            sendmsg(body, to, chatId)             
+
             self.response.write('')
+
 
 class KikApi_SendMsg(webapp2.RequestHandler):
         def get(self):
-            requests.post(
-                KIK_API_MSG,
-                auth=(KIK_USERNAME, KIK_APIKEY),
-                headers={
-                    'Content-Type': 'application/json'
-                },
-                data=json.dumps({
-                    'messages': [
-                        {
-                            'body': 'bar', 
-                            'to': 'huangkuan', 
-                            'type': 'text', 
-                            'chatId': '9d58dc9cc7fd994bbb575c9399e4335781ee55105d0784d7cb348f09d7337607'
-                        }
-                    ]
-                })
-            )
-
-            logging.info(self.request)
-            self.response.write('')
-
+            #msg = translate('i want burgers.')
+            #sendmsg(msg)
+            #print WitAPI.parse('weather in london')
+            #client = Wit('GFCMZBYVEFXZ7PSVMNQH65CHWXKSYFKB', actions)
+            #resp = client.message('weather in London?')
+            #resp = json.loads(str(resp))
+            #params = {}
+            #params['q'] = 'weather in London'
+            #resp= req('GFCMZBYVEFXZ7PSVMNQH65CHWXKSYFKB', 'GET', '/message', params)
+            #print resp
+            #logging.info(str(resp))
+            #resp = u'Ciudad de México'
+            #resp = u'上海'
+            resp = u'Paris'  
+            language = GCLOUD.detect(resp)
+            resp1 = GCLOUD.translate(resp)
+            ret = GCLOUD.geocode(resp1)
+            lat = ret.get('results')[0].get('geometry').get('location').get('lat')
+            lng = ret.get('results')[0].get('geometry').get('location').get('lng')
+            weather = DARKSKY.getWeather(lat, lng)
+            currently = weather.get('currently')
+            output = "It is " + currently.get('summary').lower() + " right now. The temperature is " + str(int(currently.get('temperature'))) + "."
+            print output
+            self.response.write(GCLOUD.translate(output, language))
 
         def post(self):
             logging.info(self.request)
             self.response.write('')
+
+
+class FBApi_Webhook(webapp2.RequestHandler):
+    def get(self):
+        #print self.request
+        logging.info('get FBApi_Webhook')
+        logging.info(self.request.get('hub.verify_token'))
+        self.response.write(self.request.get('hub.challenge'))
+
+    def post(self):
+        logging.info('post FBApi_Webhook')
+        logging.info(self.request)
+        self.response.write('')
+
 
 # [START app]
 app = webapp2.WSGIApplication([
@@ -186,6 +238,8 @@ app = webapp2.WSGIApplication([
     ('/kikapi_config', KikApi_Config),
     ('/kikapi_sendmsg', KikApi_SendMsg),    
     ('/kikapi_receivemsg', KikApi_ReceiveMsg),
+    ('/fbapi_webhook', FBApi_Webhook),
+
 
 ], debug=True)
 # [END app]
