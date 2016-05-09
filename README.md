@@ -15,6 +15,14 @@ local server
 dev_appserver.py .
 
 
+WIT
+curl -H 'Authorization: Bearer 26WCUF6D6T2KL6FOH2PEK2HNXDIU2EZ3' -H 'Accept: application/vnd.wit.20141022+json' 'https://api.wit.ai/message?q=hello'
+
+
+
+
+{u'outcomes': [{u'entities': {u'location': [{u'suggested': True, u'type': u'value', u'value': u'London'}]}, u'confidence': None, u'intent': u'default_intent', u'_text': u'weather in London'}], u'msg_id': u'6163c069-fd44-4287-b6b3-f7fa2a1d4305', u'_text': u'weather in London'}
+
 
 ## Products
 - [App Engine][1]

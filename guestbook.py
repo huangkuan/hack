@@ -25,23 +25,11 @@ import logging
 import requests
 from apis import GCLOUD
 from apis import DARKSKY
+from apis import WITAPI
 
 
 
-def say(session_id, context, msg):
-    print(msg)
 
-def merge(session_id, context, entities, msg):
-    return context
-
-def error(session_id, context, e):
-    print(str(e))
-
-actions = {
-    'say': say,
-    'merge': merge,
-    'error': error,
-}
 
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -73,24 +61,7 @@ def guestbook_key(guestbook_name=DEFAULT_GUESTBOOK_NAME):
     """
     return ndb.Key('Guestbook', guestbook_name)
 
-def req(access_token, meth, path, params, **kwargs):
-    rsp = requests.request(
-        meth,
-        'https://api.wit.ai/  ' + path,
-        headers={
-            'authorization': 'Bearer ' + access_token,
-            'accept': 'application/vnd.wit.20160330+json'
-        },
-        params=params,
-        **kwargs
-    )
-    if rsp.status_code > 200:
-        logging.info('Wit responded with status: ' + str(rsp.status_code) +
-                       ' (' + rsp.reason + ')')
-    json = rsp.json()
-    if 'error' in json:
-        raise WitError('Wit responded with an error: ' + json['error'])
-    return json
+
 
 def sendmsg(body, to=None, chatId=None):
     if chatId is None:
@@ -174,13 +145,14 @@ class KikApi_ReceiveMsg(webapp2.RequestHandler):
             body    = msg.get('body')
             to      = msg.get('from')
             chatId  = msg.get('chatId')
-            
-#            logging.info(data)
-#            logging.info(msg)
-            lan  = GCLOUD.detect(body)
-            body = GCLOUD.translate(body, lan)
 
-            sendmsg(body, to, chatId)             
+            r       = WITAPI.parse(body)
+            intent  = WITAPI.getIntentFromText(r, 'location')
+ 
+            #lan  = GCLOUD.detect(body)
+            #body = GCLOUD.translate(body, lan)
+
+            sendmsg(intent, to, chatId)             
 
             self.response.write('')
 
@@ -188,22 +160,15 @@ class KikApi_ReceiveMsg(webapp2.RequestHandler):
 class KikApi_SendMsg(webapp2.RequestHandler):
         def get(self):
             #msg = translate('i want burgers.')
-            #sendmsg(msg)
-            #print WitAPI.parse('weather in london')
-            #client = Wit('GFCMZBYVEFXZ7PSVMNQH65CHWXKSYFKB', actions)
-            #resp = client.message('weather in London?')
-            #resp = json.loads(str(resp))
-            #params = {}
-            #params['q'] = 'weather in London'
-            #resp= req('GFCMZBYVEFXZ7PSVMNQH65CHWXKSYFKB', 'GET', '/message', params)
-            #print resp
-            #logging.info(str(resp))
-            #resp = u'Ciudad de México'
-            #resp = u'上海'
-            resp = u'Paris'  
-            language = GCLOUD.detect(resp)
-            resp1 = GCLOUD.translate(resp)
-            ret = GCLOUD.geocode(resp1)
+            #sendmsg('i want burgers')
+            r = WITAPI.parse('How about the weather in Chicago?')
+
+            intent = WITAPI.getIntentFromText(r, 'location')
+            self.response.write(intent)
+
+            language = GCLOUD.detect(intent)
+            intent = GCLOUD.translate(intent)
+            ret = GCLOUD.geocode(intent)
             lat = ret.get('results')[0].get('geometry').get('location').get('lat')
             lng = ret.get('results')[0].get('geometry').get('location').get('lng')
             weather = DARKSKY.getWeather(lat, lng)
@@ -211,6 +176,7 @@ class KikApi_SendMsg(webapp2.RequestHandler):
             output = "It is " + currently.get('summary').lower() + " right now. The temperature is " + str(int(currently.get('temperature'))) + "."
             print output
             self.response.write(GCLOUD.translate(output, language))
+
 
         def post(self):
             logging.info(self.request)
