@@ -26,6 +26,7 @@ import requests
 from apis import GCLOUD
 from apis import DARKSKY
 from apis import WITAPI
+from apis import FBAPI
 from utils import *
 
 
@@ -161,37 +162,22 @@ class KikApi_ReceiveMsg(webapp2.RequestHandler):
 
 class KikApi_SendMsg(webapp2.RequestHandler):
         def get(self):
-            self.response.write('s')
-
             #msg = translate('i want burgers.')
             #sendmsg('i want burgers')
 
-            q = "How about the weather in Chicago?"
-            #q = u"上海的天气"
+            #q = "How about the weather in Chicago?"
+            #q = u"北京的天气"
+            #q = u"מזג האוויר בתל אביב"
+            q = u"高雄的天氣"
             language = GCLOUD.detect(q)
             q_en = q
             if language != "en":
                 logging.info('Translating from ' + language)
                 q_en = GCLOUD.translate(q)
             
-            logging.info(q)
-            intent = WITAPI.getIntentFromText(q_en, 'location')
-            ret = GCLOUD.geocode(intent)
-            lat = ret.get('results')[0].get('geometry').get('location').get('lat')
-            lng = ret.get('results')[0].get('geometry').get('location').get('lng')
-            weather = DARKSKY.getWeather(lat, lng)
-            currently = weather.get('currently')
-            output = "It is " + currently.get('summary').lower() + " right now. The temperature is " + str(int(currently.get('temperature'))) + "."
-            print output
-            self.response.write(GCLOUD.translate(output, language))
-
-            '''
-            r = WITAPI.parse(q)
+            logging.info(q_en)
+            r = WITAPI.parse(q_en)
             intent = WITAPI.getIntentFromText(r, 'location')
-            self.response.write(intent)
-
-            language = GCLOUD.detect(intent)
-            intent = GCLOUD.translate(intent)
             ret = GCLOUD.geocode(intent)
             lat = ret.get('results')[0].get('geometry').get('location').get('lat')
             lng = ret.get('results')[0].get('geometry').get('location').get('lng')
@@ -200,7 +186,7 @@ class KikApi_SendMsg(webapp2.RequestHandler):
             output = "It is " + currently.get('summary').lower() + " right now. The temperature is " + str(int(currently.get('temperature'))) + "."
             print output
             self.response.write(GCLOUD.translate(output, language))
-            '''
+
 
         def post(self):
             logging.info(self.request)
@@ -215,8 +201,7 @@ class FBApi_Webhook(webapp2.RequestHandler):
         self.response.write(self.request.get('hub.challenge'))
 
     def post(self):
-        logging.info('post FBApi_Webhook')
-        logging.info(self.request)
+        FBAPI.getMSG(self.request.body)
         self.response.write('')
 
 

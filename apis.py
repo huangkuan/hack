@@ -1,5 +1,8 @@
 import json
 import requests
+import logging
+from langdetect import detect
+
 from wit import Wit
 
 GOOGLE_GEOCODE_API_BASE     = 'https://maps.googleapis.com/maps/api/geocode/json?key='
@@ -77,7 +80,6 @@ class WITAPI:
         return s
 
 
-
 class DARKSKY:
     @staticmethod
     def getWeather(lat, lng):
@@ -88,7 +90,7 @@ class DARKSKY:
 
 
 class GCLOUD:
-    
+
     @staticmethod
     def translate(body, language='en'):
         url = GOOGLE_TRANSLATE_API_BASE + GOOGLE_API_KEY + '&target=' + language + '&q=' + body
@@ -116,3 +118,34 @@ class GCLOUD:
         ret = json.loads(r.content)
         print ret
         return ret.get('data').get('detections')[0][0].get('language')
+
+
+class FBAPI:
+
+    @staticmethod
+    def getMSG(body):
+        body = json.loads(body)
+        messaging   = body.get('entry')[0].get('messaging')[0]
+        message     = messaging.get('message')
+        sender      = messaging.get('sender')
+        text        = message.get('text')  
+
+        language = GCLOUD.detect(text)
+        q_en = text
+        if language != "en":
+            logging.info('Translating from ' + language)
+            q_en = GCLOUD.translate(text)
+        
+        logging.info(q_en)
+        r = WITAPI.parse(q_en)
+        intent = WITAPI.getIntentFromText(r, 'location')
+        ret = GCLOUD.geocode(intent)
+        lat = ret.get('results')[0].get('geometry').get('location').get('lat')
+        lng = ret.get('results')[0].get('geometry').get('location').get('lng')
+        weather = DARKSKY.getWeather(lat, lng)
+        currently = weather.get('currently')
+        output = "It is " + currently.get('summary').lower() + " right now in " + intent + ". The temperature is " + str(int(currently.get('temperature'))) + "."
+        print output
+
+        #body.get('entry')[0].get('messaging')
+        return ''
