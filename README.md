@@ -11,8 +11,8 @@ Installing 3rd party library for webapp2 app. You need to install it to "lib" fo
 pip install -t lib -r requirements.txt
 
 
-local server
-dev_appserver.py .
+local serverdev_appserver.py .
+
 
 
 WIT

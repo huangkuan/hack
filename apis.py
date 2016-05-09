@@ -88,7 +88,7 @@ class DARKSKY:
 
 
 class GCLOUD:
-
+    
     @staticmethod
     def translate(body, language='en'):
         url = GOOGLE_TRANSLATE_API_BASE + GOOGLE_API_KEY + '&target=' + language + '&q=' + body
