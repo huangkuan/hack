@@ -12,7 +12,8 @@ GOOGLE_API_KEY              = 'AIzaSyCjKsqtqWQI4-C5rxQEGPTLqaVwN63UURU'
 GOOGLE_TRANSLATE_API_PARAMS = '&target=en&q='
 DS_API                      = 'https://api.forecast.io/forecast/04e2a312ccb44bb2c4cc196f41a681bc/' 
 WIT_TOKEN                   = '26WCUF6D6T2KL6FOH2PEK2HNXDIU2EZ3'
-
+FB_API_SENDMSG              = 'https://graph.facebook.com/v2.6/me/messages?access_token='
+FB_PAGE_ACCESSTOKEN         = 'EAAQvFtXCf0gBAE7M2gBGwO51pZACZAGxmcFi3eF3gNxfHygZAdqRmFZBCh78cBILqs4ZAff9YMsfRv9jKppAMZCSy1qo43FXG3BP3RtY47UBZBX059lfA0ZA7DUI8zmozR4RYLg9pSP5bDMAyYzSgRMjkT52bwZCbmgocM0myQZCUcrgZDZD'
 def say(session_id, context, msg):
     print(msg)
 
@@ -122,13 +123,46 @@ class GCLOUD:
 
 class FBAPI:
 
-    @staticmethod
-    def getMSG(body):
-        body = json.loads(body)
-        messaging   = body.get('entry')[0].get('messaging')[0]
-        message     = messaging.get('message')
-        sender      = messaging.get('sender')
-        text        = message.get('text')  
+    def __init__(self):
+        self.user_id = None
+
+
+
+    def sendMSG(self, body):
+        url     = FB_API_SENDMSG + FB_PAGE_ACCESSTOKEN
+        params  = {
+            "recipient":{
+                "id":self.user_id
+            },
+            "message":{
+                "text":"test"
+            }
+        } 
+        print params
+        rsp = requests.request(
+            'POST',
+            url,
+            headers={
+                'Content-Type': 'application/json'
+            },
+            params=params,
+        )
+
+        return ''
+
+
+
+    def getMSG(self, body):
+        body                = json.loads(body)
+        #print body
+        messaging           = body.get('entry')[0].get('messaging')[0]
+        message             = messaging.get('message')
+        if message is None:
+            #might be a delivery receipt
+            return None
+
+        self.user_id        = messaging[0].get('sender').get('id')
+        text                = message.get('text')  
 
         language = GCLOUD.detect(text)
         q_en = text
@@ -136,6 +170,7 @@ class FBAPI:
             logging.info('Translating from ' + language)
             q_en = GCLOUD.translate(text)
         
+
         logging.info(q_en)
         r = WITAPI.parse(q_en)
         intent = WITAPI.getIntentFromText(r, 'location')
@@ -147,5 +182,4 @@ class FBAPI:
         output = "It is " + currently.get('summary').lower() + " right now in " + intent + ". The temperature is " + str(int(currently.get('temperature'))) + "."
         print output
 
-        #body.get('entry')[0].get('messaging')
-        return ''
+        return output

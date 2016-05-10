@@ -200,8 +200,16 @@ class FBApi_Webhook(webapp2.RequestHandler):
         logging.info(self.request.get('hub.verify_token'))
         self.response.write(self.request.get('hub.challenge'))
 
+
     def post(self):
-        FBAPI.getMSG(self.request.body)
+        print self.request
+        #messaging           = body.get('entry')[0].get('messaging')[0]
+        #sender_id = self.request.body()
+        #p = FBAPI()
+        #m = p.getMSG(self.request.body)
+        #if m is not None:
+        #    p.sendMSG(m)
+
         self.response.write('')
 
 

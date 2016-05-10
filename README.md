@@ -25,6 +25,32 @@ curl -H 'Authorization: Bearer 26WCUF6D6T2KL6FOH2PEK2HNXDIU2EZ3' -H 'Accept: app
 
 Sample FB Message:
 
+
+delivery
+{"object":"page","entry":
+	[{
+	"id":510512709009335,
+	"time":1462900342983,
+	"messaging":
+		[
+			{
+				"sender":{
+					"id":353463854777868
+				},
+				"recipient":{
+					"id":510512709009335
+				},
+				"delivery":{
+					"mids":["mid.1462899852687:81fe8fb574053bee49"],
+					"watermark":1462899852756,
+					"seq":23
+				}
+			}
+		]
+	}]
+}
+
+
 text
 {"object":"page","entry":
 	[{
