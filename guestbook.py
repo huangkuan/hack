@@ -202,13 +202,17 @@ class FBApi_Webhook(webapp2.RequestHandler):
 
 
     def post(self):
-        print self.request
-        #messaging           = body.get('entry')[0].get('messaging')[0]
-        #sender_id = self.request.body()
-        #p = FBAPI()
-        #m = p.getMSG(self.request.body)
-        #if m is not None:
-        #    p.sendMSG(m)
+        print self.request.body
+        data        = json.loads(self.request.body)
+        sender_id   = data.get('entry')[0].get('messaging')[0].get('sender').get('id')
+        text        = data.get('entry')[0].get('messaging')[0].get('message').get('text')
+        print sender_id
+        print text
+        p = FBAPI(sender_id)
+        m = p.getMSG(text)
+        print m
+        if m is not None:
+            p.sendMSG(m)
 
         self.response.write('')
 

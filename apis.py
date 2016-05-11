@@ -123,8 +123,8 @@ class GCLOUD:
 
 class FBAPI:
 
-    def __init__(self):
-        self.user_id = None
+    def __init__(self, id):
+        self.user_id = id
 
 
 
@@ -153,16 +153,7 @@ class FBAPI:
 
 
     def getMSG(self, body):
-        body                = json.loads(body)
-        #print body
-        messaging           = body.get('entry')[0].get('messaging')[0]
-        message             = messaging.get('message')
-        if message is None:
-            #might be a delivery receipt
-            return None
-
-        self.user_id        = messaging[0].get('sender').get('id')
-        text                = message.get('text')  
+        text = body  
 
         language = GCLOUD.detect(text)
         q_en = text
@@ -175,6 +166,8 @@ class FBAPI:
         r = WITAPI.parse(q_en)
         intent = WITAPI.getIntentFromText(r, 'location')
         ret = GCLOUD.geocode(intent)
+        print ret
+        return ''
         lat = ret.get('results')[0].get('geometry').get('location').get('lat')
         lng = ret.get('results')[0].get('geometry').get('location').get('lng')
         weather = DARKSKY.getWeather(lat, lng)
