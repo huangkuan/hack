@@ -11,7 +11,7 @@ Installing 3rd party library for webapp2 app. You need to install it to "lib" fo
 pip install -t lib -r requirements.txt
 
 
-local serverdev_appserver.py .
+local server dev_appserver.py .
 
 
 
@@ -78,7 +78,26 @@ text
 
 
 voice
-{"object":"page","entry":[{"id":510512709009335,"time":1462831049724,"messaging":[{"sender":{"id":353463854777868},"recipient":{"id":510512709009335},"timestamp":1462831049679,"message":{"mid":"mid.1462831049027:d61f3f3cee6d27d966","seq":5,"attachments":[{"type":"audio","payload":{"url":"https:\/\/cdn.fbsbx.com\/v\/t59.3654-21\/13125087_10104925638592579_341428229_n.mp4\/audioclip-1462831048000-1756.mp4?oh=4925c871f85f1669fcb53a3451699a80&oe=57328D24"}}]}}]}]}
+{
+	"object":"page",
+	"entry":[{
+		"id":510512709009335,
+		"time":1462831049724,
+		"messaging":[{
+			"sender":{"id":353463854777868},
+			"recipient":{"id":510512709009335},
+			"timestamp":1462831049679,
+			"message":{
+				"mid":"mid.1462831049027:d61f3f3cee6d27d966",
+				"seq":5,
+				"attachments":[{
+					"type":"audio",
+					"payload":{"url":"https:\/\/cdn.fbsbx.com\/v\/t59.3654-21\/13125087_10104925638592579_341428229_n.mp4\/audioclip-1462831048000-1756.mp4?oh=4925c871f85f1669fcb53a3451699a80&oe=57328D24"}
+				}]
+			}
+		}]
+	}]
+}
 
 Like button
 {"object":"page","entry":[{"id":510512709009335,"time":1462831405538,"messaging":[{"sender":{"id":353463854777868},"recipient":{"id":510512709009335},"timestamp":1462831405505,"message":{"mid":"mid.1462831405486:364cfbaa7c57df3308","seq":10,"sticker_id":369239343222814,"attachments":[{"type":"image","payload":{"url":"https:\/\/fbcdn-dragon-a.akamaihd.net\/hphotos-ak-xaf1\/t39.1997-6\/p100x100\/851587_369239346556147_162929011_n.png"}}]}}]}]}

@@ -28,7 +28,7 @@ from apis import DARKSKY
 from apis import WITAPI
 from apis import FBAPI
 from utils import *
-
+from gcloud import datastore
 
 
 
@@ -63,8 +63,6 @@ def guestbook_key(guestbook_name=DEFAULT_GUESTBOOK_NAME):
     """
     return ndb.Key('Guestbook', guestbook_name)
 
-
-
 def sendmsg(body, to=None, chatId=None):
     if chatId is None:
         chatId  = '9d58dc9cc7fd994bbb575c9399e4335781ee55105d0784d7cb348f09d7337607'
@@ -93,6 +91,21 @@ def sendmsg(body, to=None, chatId=None):
 class MainPage(webapp2.RequestHandler):
 
     def get(self):
+        client = datastore.Client('kikapi-1298')
+        q = client.query(kind='UserProfile')
+        q.add_filter('uid', '=', '12345')
+        r = list(q.fetch())[0]
+        print r
+
+        #key = client.key('UserProfile')
+        #u = datastore.Entity(key)
+        #u.update({'mode':'0'})
+        #client.put(u)
+        #print u.key
+        #q = client.query(kind='UserProfile', id='5629499534213120')
+        #for a in q.fetch():
+        #    print a
+
         self.response.write('MainPage')
 
 class KikApi(webapp2.RequestHandler):
@@ -159,39 +172,14 @@ class KikApi_ReceiveMsg(webapp2.RequestHandler):
 
             self.response.write('')
 
-
 class KikApi_SendMsg(webapp2.RequestHandler):
         def get(self):
-            #msg = translate('i want burgers.')
-            #sendmsg('i want burgers')
-
-            #q = "How about the weather in Chicago?"
-            #q = u"北京的天气"
-            #q = u"מזג האוויר בתל אביב"
-            q = u"高雄的天氣"
-            language = GCLOUD.detect(q)
-            q_en = q
-            if language != "en":
-                logging.info('Translating from ' + language)
-                q_en = GCLOUD.translate(q)
-            
-            logging.info(q_en)
-            r = WITAPI.parse(q_en)
-            intent = WITAPI.getIntentFromText(r, 'location')
-            ret = GCLOUD.geocode(intent)
-            lat = ret.get('results')[0].get('geometry').get('location').get('lat')
-            lng = ret.get('results')[0].get('geometry').get('location').get('lng')
-            weather = DARKSKY.getWeather(lat, lng)
-            currently = weather.get('currently')
-            output = "It is " + currently.get('summary').lower() + " right now. The temperature is " + str(int(currently.get('temperature'))) + "."
-            print output
-            self.response.write(GCLOUD.translate(output, language))
+            self.response.write('')
 
 
         def post(self):
             logging.info(self.request)
             self.response.write('')
-
 
 class FBApi_Webhook(webapp2.RequestHandler):
     def get(self):
@@ -202,17 +190,16 @@ class FBApi_Webhook(webapp2.RequestHandler):
 
 
     def post(self):
-        print self.request.body
+
         data        = json.loads(self.request.body)
         sender_id   = data.get('entry')[0].get('messaging')[0].get('sender').get('id')
         text        = data.get('entry')[0].get('messaging')[0].get('message').get('text')
-        print sender_id
-        print text
-        p = FBAPI(sender_id)
+
+        p = FBAPI(str(sender_id))
         m = p.getMSG(text)
-        print m
+        #print m
         if m is not None:
-            p.sendMSG(m)
+            p.sendText(m)
 
         self.response.write('')
 

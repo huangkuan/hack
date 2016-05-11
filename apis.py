@@ -5,6 +5,7 @@ from langdetect import detect
 
 from wit import Wit
 
+ERR_MSG                     = 'My boss has not taught me that.'
 GOOGLE_GEOCODE_API_BASE     = 'https://maps.googleapis.com/maps/api/geocode/json?key='
 GOOGLE_TRANSLATE_API_BASE   = 'https://www.googleapis.com/language/translate/v2?key='
 GOOGLE_DETECT_API_BASE      = 'https://www.googleapis.com/language/translate/v2/detect?key='
@@ -126,36 +127,59 @@ class FBAPI:
     def __init__(self, id):
         self.user_id = id
 
+    '''
+    def incomingMSG(self, body):
+        entry         = json.loads(body).get('entry')
+        sender_id     = entry[0].get('messaging')[0].get('sender').get('id')
+        message       = entry[0].get('messaging')[0].get('message')
+        attachment    = message.get('attachment')
 
+        if attachment is not None:
+            print 'has attachment'
+        else:
+            text = message.get('text')
+            print "no attachment"
 
-    def sendMSG(self, body):
+        return ''
+    '''
+
+    def sendText(self, body):
         url     = FB_API_SENDMSG + FB_PAGE_ACCESSTOKEN
         params  = {
-            "recipient":{
-                "id":self.user_id
+            'recipient':{
+                'id':self.user_id
             },
-            "message":{
-                "text":"test"
+            'message':{
+                'text':body
             }
-        } 
-        print params
-        rsp = requests.request(
-            'POST',
-            url,
+        }
+
+        rsp = requests.post(
+            url, 
             headers={
                 'Content-Type': 'application/json'
             },
-            params=params,
+            data=json.dumps(params)
         )
 
+        if rsp.status_code > 200:
+            logging.info('FB Chat API responded with status: ' + str(rsp.status_code) + ' (' + rsp.reason + ')')
+        
         return ''
 
 
-
     def getMSG(self, body):
-        text = body  
+        if body is None:
+            return ERR_MSG
 
-        language = GCLOUD.detect(text)
+        text = body  
+        language = "en"
+        try:
+            language = GCLOUD.detect(text)
+            #language = detect(text)
+        except:
+            logging.info('Failed to detect language. Default to en.')
+
         q_en = text
         if language != "en":
             logging.info('Translating from ' + language)
@@ -165,14 +189,26 @@ class FBAPI:
         logging.info(q_en)
         r = WITAPI.parse(q_en)
         intent = WITAPI.getIntentFromText(r, 'location')
+        
+        if intent is None:
+            return ERR_MSG
+
         ret = GCLOUD.geocode(intent)
-        print ret
-        return ''
         lat = ret.get('results')[0].get('geometry').get('location').get('lat')
         lng = ret.get('results')[0].get('geometry').get('location').get('lng')
         weather = DARKSKY.getWeather(lat, lng)
         currently = weather.get('currently')
-        output = "It is " + currently.get('summary').lower() + " right now in " + intent + ". The temperature is " + str(int(currently.get('temperature'))) + "."
-        print output
+        #output = "The weather is " + currently.get('summary').lower() + " right now in " + intent + ". The temperature is " + str(int(currently.get('temperature'))) + "."
+        temp = int(currently.get('temperature'))
+        if language != "en":
+            temp = int(round((int(temp)-32)*5/9.0))
 
-        return output
+        output = "The weather in " + intent + " right now is " + currently.get('summary').lower() + ". The temperature is " + str(temp) + " degree."
+        if language != "en":
+            return GCLOUD.translate(output, language) 
+        else:
+            return output
+
+
+
+
