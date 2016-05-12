@@ -106,7 +106,27 @@ Location
 {"object":"page","entry":[{"id":510512709009335,"time":1462831442791,"messaging":[{"sender":{"id":353463854777868},"recipient":{"id":510512709009335},"timestamp":1462831442741,"message":{"mid":"mid.1462831442528:9f35630223d18bc236","seq":11,"attachments":[{"title":"Kuan's Location","url":"https:\/\/www.facebook.com\/l.php?u=https\u00253A\u00252F\u00252Fwww.bing.com\u00252Fmaps\u00252Fdefault.aspx\u00253Fv\u00253D2\u002526pc\u00253DFACEBK\u002526mid\u00253D8100\u002526where1\u00253D40.740507163823\u0025252C\u00252B-74.007804460413\u002526FORM\u00253DFBKPL1\u002526mkt\u00253Den-US&h=EAQG0dFKN&s=1&enc=AZPdTGPTgIENGH8thj31euZwBastoyAJmgmGJJ3SYjb14Acx17B8M6AmZcyyOunvhZqAlnzcbdrBpNaG7jD99D4jnesLYnjACpDDEfsXob6GrQ","type":"location","payload":{"coordinates":{"lat":40.740507163823,"long":-74.007804460413}}}]}}]}]}
 
 GIF
-{"object":"page","entry":[{"id":510512709009335,"time":1462831482668,"messaging":[{"sender":{"id":353463854777868},"recipient":{"id":510512709009335},"timestamp":1462831482619,"message":{"mid":"mid.1462831482470:641b8d9eacb6ecc331","seq":12,"attachments":[{"type":"image","payload":{"url":"https:\/\/cdn.fbsbx.com\/v\/t59.2708-21\/11988983_1068775179808982_479777370_n.gif?oh=0df1bb137b0643533cb4017492d199da&oe=57334918"}}]}}]}]}
+{
+	"object":"page",
+	"entry":[{
+		"id":510512709009335,
+		"time":1462831482668,
+		"messaging":[{
+			"sender":{"id":353463854777868},
+			"recipient":{"id":510512709009335},
+			"timestamp":1462831482619,
+			"message":{
+				"mid":"mid.1462831482470:641b8d9eacb6ecc331",
+				"seq":12,
+				"attachments":[{
+					"type":"image",
+					"payload":
+					{"url":"https:\/\/cdn.fbsbx.com\/v\/t59.2708-21\/11988983_1068775179808982_479777370_n.gif?oh=0df1bb137b0643533cb4017492d199da&oe=57334918"}
+				}]
+			}
+		}]
+	}]
+}
 
 
 ## E2E Test for this sample app

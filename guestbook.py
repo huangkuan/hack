@@ -108,6 +108,7 @@ class MainPage(webapp2.RequestHandler):
 
         self.response.write('MainPage')
 
+
 class KikApi(webapp2.RequestHandler):
     def get(self):
         #print self.request
@@ -196,8 +197,9 @@ class FBApi_Webhook(webapp2.RequestHandler):
         text        = data.get('entry')[0].get('messaging')[0].get('message').get('text')
 
         p = FBAPI(str(sender_id))
-        m = p.getMSG(text)
-        #print m
+        m = p.incomingMSG(data)
+        #m = p.getMSG(text)
+
         if m is not None:
             p.sendText(m)
 

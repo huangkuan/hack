@@ -127,21 +127,24 @@ class FBAPI:
     def __init__(self, id):
         self.user_id = id
 
-    '''
+    
     def incomingMSG(self, body):
-        entry         = json.loads(body).get('entry')
+        entry         = body.get('entry')
         sender_id     = entry[0].get('messaging')[0].get('sender').get('id')
         message       = entry[0].get('messaging')[0].get('message')
-        attachment    = message.get('attachment')
+        attachments   = message.get('attachments')
+        ret           = None
 
-        if attachment is not None:
-            print 'has attachment'
+        print attachments
+        if attachments is not None:
+            t = attachments[0].get('type')
+            ret = attachments[0].get('payload').get('url')
         else:
             text = message.get('text')
-            print "no attachment"
+            ret = self.getMSG(text)
 
-        return ''
-    '''
+        return ret
+    
 
     def sendText(self, body):
         url     = FB_API_SENDMSG + FB_PAGE_ACCESSTOKEN
