@@ -2,8 +2,9 @@ import json
 import requests
 import logging
 from langdetect import detect
-
 from wit import Wit
+from models import UserSettings
+
 
 ERR_MSG                     = 'My boss has not taught me that.'
 GOOGLE_GEOCODE_API_BASE     = 'https://maps.googleapis.com/maps/api/geocode/json?key='
@@ -15,6 +16,7 @@ DS_API                      = 'https://api.forecast.io/forecast/04e2a312ccb44bb2
 WIT_TOKEN                   = '26WCUF6D6T2KL6FOH2PEK2HNXDIU2EZ3'
 FB_API_SENDMSG              = 'https://graph.facebook.com/v2.6/me/messages?access_token='
 FB_PAGE_ACCESSTOKEN         = 'EAAQvFtXCf0gBAE7M2gBGwO51pZACZAGxmcFi3eF3gNxfHygZAdqRmFZBCh78cBILqs4ZAff9YMsfRv9jKppAMZCSy1qo43FXG3BP3RtY47UBZBX059lfA0ZA7DUI8zmozR4RYLg9pSP5bDMAyYzSgRMjkT52bwZCbmgocM0myQZCUcrgZDZD'
+
 def say(session_id, context, msg):
     print(msg)
 
@@ -126,22 +128,75 @@ class FBAPI:
 
     def __init__(self, id):
         self.user_id = id
+        self.settings = 0
 
-    '''
+    
     def incomingMSG(self, body):
-        entry         = json.loads(body).get('entry')
+        entry         = body.get('entry')
         sender_id     = entry[0].get('messaging')[0].get('sender').get('id')
         message       = entry[0].get('messaging')[0].get('message')
-        attachment    = message.get('attachment')
+        attachments   = message.get('attachments')
+        ret           = None
 
-        if attachment is not None:
-            print 'has attachment'
+        if attachments is not None:
+            t = attachments[0].get('type')
+            url = attachments[0].get('payload').get('url')
+            self.sendAttachment(t, url)
         else:
             text = message.get('text')
-            print "no attachment"
+            q = UserSettings.query(UserSettings.userid==111)
+            r = q.fetch()                        
+            self.settings = r[0].settings    
+            if "get smarter" in text.lower():
+                r[0].settings = 1
+                r[0].put()
+                self.settings = 1
+                ret = "Yes boss. I just updated my brain."
+            elif "go nuts" in text.lower():
+                r[0].settings = 2
+                r[0].put()
+                self.settings = 2
+                ret = "OK. I'm on fire now."
+            elif "calm down" in text.lower():
+                r[0].settings = 0
+                r[0].put()
+                self.settings = 0
+                ret = "I'm cool now."
+            else:
+                ret = self.getMSG(text)
+
+        return ret
+    
+    def sendAttachment(self, type, payload_url):
+        url     = FB_API_SENDMSG + FB_PAGE_ACCESSTOKEN
+        params  = {
+            'recipient':{
+                'id':self.user_id
+            },
+            'message':{
+                'attachment':{
+                    'type'      :type,
+                    'payload'   :{
+                        "url": payload_url
+                    }
+                }
+            }
+        }
+        
+        print params
+        rsp = requests.post(
+            url, 
+            headers={
+                'Content-Type': 'application/json'
+            },
+            data=json.dumps(params)
+        )
+
+        if rsp.status_code > 200:
+            logging.info('FB Chat Attachment API responded with status: ' + str(rsp.status_code) + ' (' + rsp.reason + ')')
 
         return ''
-    '''
+
 
     def sendText(self, body):
         url     = FB_API_SENDMSG + FB_PAGE_ACCESSTOKEN
@@ -204,10 +259,15 @@ class FBAPI:
             temp = int(round((int(temp)-32)*5/9.0))
 
         output = "The weather in " + intent + " right now is " + currently.get('summary').lower() + ". The temperature is " + str(temp) + " degree."
-        if language != "en":
-            return GCLOUD.translate(output, language) 
-        else:
+        print self.settings
+
+        if self.settings == 0:
             return output
+        else:
+            if language != "en":
+                return GCLOUD.translate(output, language) 
+            else:
+                return output
 
 
 

@@ -93,31 +93,8 @@ class MainPage(webapp2.RequestHandler):
     def get(self):
         q = UserSettings.query(UserSettings.userid==111)
         r = q.fetch()
-        print r[0]
-        r[0].settings = 19
-        r[0].put()
+        self.response.write(r[0])
 
-        #profile = UserSettings(userid=111, settings=0)
-        #profile.put()
-        #q = UserSettings.all()
-        #for a in q:
-        #    print a.userid
-        #client = datastore.Client('kikapi-1298')
-        #q = client.query(kind='UserProfile')
-        #q.add_filter('uid', '=', '12345')
-        #r = list(q.fetch())[0]
-        #print r
-
-        #key = client.key('UserProfile')
-        #u = datastore.Entity(key)
-        #u.update({'mode':'0'})
-        #client.put(u)
-        #print u.key
-        #q = client.query(kind='UserProfile', id='5629499534213120')
-        #for a in q.fetch():
-        #    print a
-
-        self.response.write(r)
 
 class KikApi(webapp2.RequestHandler):
     def get(self):
@@ -128,6 +105,7 @@ class KikApi(webapp2.RequestHandler):
     def post(self):
         #logging.info('kik post api.')
         self.response.write("Testing page for Kik API POST")
+
 
 class KikApi_Config(webapp2.RequestHandler):
     def get(self):
@@ -158,6 +136,7 @@ class KikApi_Config(webapp2.RequestHandler):
             })
         )
         self.response.write(r.content)
+
 
 class KikApi_ReceiveMsg(webapp2.RequestHandler):
 
@@ -207,8 +186,9 @@ class FBApi_Webhook(webapp2.RequestHandler):
         text        = data.get('entry')[0].get('messaging')[0].get('message').get('text')
 
         p = FBAPI(str(sender_id))
-        m = p.getMSG(text)
-        #print m
+        m = p.incomingMSG(data)
+        #m = p.getMSG(text)
+
         if m is not None:
             p.sendText(m)
 
