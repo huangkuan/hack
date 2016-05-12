@@ -29,7 +29,7 @@ from apis import WITAPI
 from apis import FBAPI
 from utils import *
 from gcloud import datastore
-
+from models import UserSettings
 
 
 
@@ -91,11 +91,22 @@ def sendmsg(body, to=None, chatId=None):
 class MainPage(webapp2.RequestHandler):
 
     def get(self):
-        client = datastore.Client('kikapi-1298')
-        q = client.query(kind='UserProfile')
-        q.add_filter('uid', '=', '12345')
-        r = list(q.fetch())[0]
-        print r
+        q = UserSettings.query(UserSettings.userid==111)
+        r = q.fetch()
+        print r[0]
+        r[0].settings = 19
+        r[0].put()
+
+        #profile = UserSettings(userid=111, settings=0)
+        #profile.put()
+        #q = UserSettings.all()
+        #for a in q:
+        #    print a.userid
+        #client = datastore.Client('kikapi-1298')
+        #q = client.query(kind='UserProfile')
+        #q.add_filter('uid', '=', '12345')
+        #r = list(q.fetch())[0]
+        #print r
 
         #key = client.key('UserProfile')
         #u = datastore.Entity(key)
@@ -106,7 +117,7 @@ class MainPage(webapp2.RequestHandler):
         #for a in q.fetch():
         #    print a
 
-        self.response.write('MainPage')
+        self.response.write(r)
 
 class KikApi(webapp2.RequestHandler):
     def get(self):
