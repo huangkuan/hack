@@ -20,7 +20,44 @@ curl -H 'Authorization: Bearer 26WCUF6D6T2KL6FOH2PEK2HNXDIU2EZ3' -H 'Accept: app
 
 {u'outcomes': [{u'entities': {u'location': [{u'suggested': True, u'type': u'value', u'value': u'London'}]}, u'confidence': None, u'intent': u'default_intent', u'_text': u'weather in London'}], u'msg_id': u'6163c069-fd44-4287-b6b3-f7fa2a1d4305', u'_text': u'weather in London'}
 
+
+WIT.AI response
+{
+	'outcomes': 
+		[{
+			'entities': 
+			{
+				'location': 
+					[
+						{
+							'suggested': True, 
+							'confidence': 0.99649060564069725, 
+							'type': 'value', 
+							'value': 'new york'
+						}
+					], 
+
+				'weather_condition': 
+					[
+						{
+							'confidence': 0.82987589026789177, 
+							'type': u'value', 
+							'value': u'overcast'
+						}
+					]
+			},
+			'confidence': None, 
+			'intent': 'default_intent', 
+			'_text': 'is it raining in new york'
+		}], 
+	'msg_id': 'dd201572-d465-41a6-b519-0695e62db4ea', 
+	'WARNING': 'DEPRECATED', 
+	'_text': 'is it raining in new york'
+}
+
 Sample FB Message:
+
+
 
 
 delivery
