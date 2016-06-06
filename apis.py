@@ -73,7 +73,7 @@ class WITAPI:
         for o in outcomes:
             entities = o.get('entities')
             if entities.get(i) is not None:
-                loc =  entities.get('location')[0].get('value')
+                loc =  entities.get('i')[0].get('value')
                 return loc
         
         return None
@@ -243,22 +243,26 @@ class FBAPI:
 
         logging.info(q_en)
         r = WITAPI.parse(q_en)
-        intent = WITAPI.getIntentFromText(r, 'location')
-        
-        if intent is None:
+        location                = WITAPI.getIntentFromText(r, 'location')
+        weather_condition       = WITAPI.getIntentFromText(r, 'weather_condition')
+
+        if location is None:
             return ERR_MSG
 
-        ret = GCLOUD.geocode(intent)
+        ret = GCLOUD.geocode(location)
         lat = ret.get('results')[0].get('geometry').get('location').get('lat')
         lng = ret.get('results')[0].get('geometry').get('location').get('lng')
         weather = DARKSKY.getWeather(lat, lng)
         currently = weather.get('currently')
-        #output = "The weather is " + currently.get('summary').lower() + " right now in " + intent + ". The temperature is " + str(int(currently.get('temperature'))) + "."
         temp = int(currently.get('temperature'))
         if language != "en":
             temp = int(round((int(temp)-32)*5/9.0))
 
-        output = "The weather in " + intent + " right now is " + currently.get('summary').lower() + ". The temperature is " + str(temp) + " degree."
+        if weather_condition is None:
+            output = "The weather in " + location + " right now is " + currently.get('summary').lower() + ". The temperature is " + str(temp) + " degree."
+        else:
+            output = "["+weather_condition+"]"
+            
         print self.settings
 
         if self.settings == 0:
