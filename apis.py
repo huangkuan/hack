@@ -73,7 +73,7 @@ class WITAPI:
         for o in outcomes:
             entities = o.get('entities')
             if entities.get(i) is not None:
-                loc =  entities.get('i')[0].get('value')
+                loc =  entities.get(i)[0].get('value')
                 return loc
         
         return None
@@ -147,21 +147,26 @@ class FBAPI:
             q = UserSettings.query(UserSettings.userid==111)
             r = q.fetch()                        
             self.settings = r[0].settings    
-            if "get smarter" in text.lower():
+            if "reply with native language" in text.lower():
                 r[0].settings = 1
                 r[0].put()
                 self.settings = 1
-                ret = "Yes boss. I just updated my brain."
+                ret = ":*"
             elif "go nuts" in text.lower():
                 r[0].settings = 2
                 r[0].put()
                 self.settings = 2
                 ret = "OK. I'm on fire now."
-            elif "calm down" in text.lower():
+            elif "reply with english" in text.lower():
                 r[0].settings = 0
                 r[0].put()
                 self.settings = 0
-                ret = "I'm cool now."
+                ret = ":like:"
+            elif "thank you" in text.lower():
+                ret = "Any time baby <3"
+            elif "sup poncho" in text.lower():
+                ret = "Hey there"
+
             else:
                 ret = self.getMSG(text)
 
@@ -240,11 +245,12 @@ class FBAPI:
             logging.info('Translating from ' + language)
             q_en = GCLOUD.translate(text)
         
-
         logging.info(q_en)
         r = WITAPI.parse(q_en)
         location                = WITAPI.getIntentFromText(r, 'location')
         weather_condition       = WITAPI.getIntentFromText(r, 'weather_condition')
+        weather_accessory       = WITAPI.getIntentFromText(r, 'weather_accessory')
+
 
         if location is None:
             return ERR_MSG
@@ -258,11 +264,28 @@ class FBAPI:
         if language != "en":
             temp = int(round((int(temp)-32)*5/9.0))
 
-        if weather_condition is None:
-            output = "The weather in " + location + " right now is " + currently.get('summary').lower() + ". The temperature is " + str(temp) + " degree."
+        #hack
+        current_condition = currently.get('summary').lower()
+        if current_condition == "clear":
+            current_condition = "sunny"
+
+        if weather_accessory is None and weather_condition is None:
+            output = "The weather in " + location + " now is " + current_condition + ". The temperature is " + str(temp) + " degree."
         else:
-            output = "["+weather_condition+"]"
+            if weather_condition is not None:
+                if weather_condition in current_condition or weather_condition in current_condition.replace("drizzle", "rain"):
+                    output = "Yes, it is. And the temperature is " + str(temp) + " degree."
+                else:
+                    output = "Nope. The weather in " + location + " now is " + current_condition + "."
+            else:
+                if "glass" in weather_accessory and "sunny" in current_condition:
+                    output = "Yup 8-), bring that with you. The weather in " + location + " now is " + current_condition + "."
+                elif "umbrella" in weather_accessory and "rain" in current_condition.replace("drizzle", "rain"):
+                    output = "Yup, bring that with you. The weather in " + location + " now is " + current_condition + "."
+                else:
+                    output = "Nope. You're all good. The weather there now is " + current_condition + "."
             
+
         print self.settings
 
         if self.settings == 0:
